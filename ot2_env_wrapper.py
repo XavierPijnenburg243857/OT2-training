@@ -79,7 +79,7 @@ class OT2Env(gym.Env):
         reward += float(progress * 50)
         self.prev_distance = distance
         
-        threshold = 0.01
+        threshold = 0.001
         if distance < threshold:
             terminated = True
             reward += 200.0
