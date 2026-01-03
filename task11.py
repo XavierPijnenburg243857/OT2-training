@@ -107,11 +107,11 @@ wandb_callback = WandbCallback(
 )
 
 time_steps = 100000
-best_success_rate = 0.0
+best_success_rate = -1.0
 best_iteration = 0
 no_improvement_count = 0
 
-for i in range(10):
+for i in range(20):
     model.learn(
         total_timesteps=time_steps, 
         callback=wandb_callback, 
@@ -130,7 +130,7 @@ for i in range(10):
     
     # Print detailed results
     print(f"\n{'='*60}")
-    print(f"Cycle {i+1}/{10} Evaluation Results:")
+    print(f"Cycle {i+1}/20 Evaluation Results:")
     print(f"{'='*60}")
     print(f"  Success Rate:      {metrics['success_rate']*100:.1f}% ({metrics['num_successes']}/{metrics['num_episodes']})")
     print(f"  Avg Steps (success): {metrics['avg_steps']:.1f}")
@@ -147,14 +147,17 @@ for i in range(10):
     
     # Save model after each cycle
     model.save(f"models/{run.id}/{time_steps*(i+1)}")
-    
-    # Early stopping based on success rate
-    if metrics['success_rate'] > best_success_rate + args.min_success_improvement:
+
+    # Always track and save best model
+    if metrics['success_rate'] > best_success_rate:
         best_success_rate = metrics['success_rate']
         best_iteration = i + 1
-        no_improvement_count = 0
         model.save(f"models/{run.id}/best_model")
-        print(f"New best success rate: {best_success_rate*100:.1f}%")
+        print(f"New best: {best_success_rate*100:.1f}%")
+
+    # Early stopping based on meaningful improvement
+    if i > 0 and metrics['success_rate'] > best_success_rate - args.min_success_improvement:
+        no_improvement_count = 0  # Reset if within threshold of best
     else:
         no_improvement_count += 1
         print(f"No improvement for {no_improvement_count} cycle(s)")
