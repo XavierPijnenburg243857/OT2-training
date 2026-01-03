@@ -8,7 +8,6 @@ class OT2Env(gym.Env):
     def __init__(self, render=False, max_steps=1000):
         super(OT2Env, self).__init__()
         
-        # Close any existing PyBullet connections first
         try:
             p.disconnect()
         except:
@@ -17,10 +16,8 @@ class OT2Env(gym.Env):
         self.render_mode = render
         self.max_steps = max_steps
 
-        # Create the simulation environment
         self.sim = Simulation(num_agents=1, render=render)
 
-        # Define action space: 3 continuous values for x, y, z velocities
         self.action_space = spaces.Box(
             low=np.array([-1, -1, -1], dtype=np.float32),
             high=np.array([1, 1, 1], dtype=np.float32),
@@ -28,7 +25,6 @@ class OT2Env(gym.Env):
             dtype=np.float32
         )
         
-        # Define observation space: 6 values (pipette x,y,z + goal x,y,z)
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
@@ -38,13 +34,10 @@ class OT2Env(gym.Env):
 
         self.steps = 0
         self.goal_position = None
-        self.robot_id = None  # Will be set dynamically
+        self.prev_distance = None
 
     def _get_pipette_position(self, observation):
-        """Helper function to extract pipette position from observation"""
-        # Always get the current robot key from the observation
         robot_id = list(observation.keys())[0]
-        
         return np.array(
             observation[robot_id]['pipette_position'],
             dtype=np.float32
@@ -54,27 +47,21 @@ class OT2Env(gym.Env):
         if seed is not None:
             np.random.seed(seed)
 
-        # Set a random goal position within the working area
         self.goal_position = np.array([
             np.random.uniform(-0.187, 0.253),  # x range
             np.random.uniform(-0.1705, 0.2195),   # y range
             np.random.uniform(0.17, 0.2895)    # z range
         ], dtype=np.float32)
         
-        # Reset simulation
         self.sim.reset(num_agents=1)
-        
-        # Get initial state by running one step with zero action
         observation = self.sim.run([[0, 0, 0, 0]], num_steps=1)
         
-        # Extract pipette position using helper function
         pipette_pos = self._get_pipette_position(observation)
-        
-        # Combine pipette position and goal position
         observation = np.concatenate([pipette_pos, self.goal_position])
 
         self.steps = 0
-
+        self.prev_distance = np.linalg.norm(pipette_pos - self.goal_position)
+        
         return observation, {}
 
     def step(self, action):
@@ -85,12 +72,17 @@ class OT2Env(gym.Env):
         observation = np.concatenate([pipette_pos, self.goal_position])
 
         distance = np.linalg.norm(pipette_pos - self.goal_position)
-        reward = float(-distance)  # Convert to Python float
         
-        threshold = 0.001
+        reward = float(-distance * 10)
+        
+        progress = self.prev_distance - distance
+        reward += float(progress * 50)
+        self.prev_distance = distance
+        
+        threshold = 0.01
         if distance < threshold:
             terminated = True
-            reward += 100.0  # Bonus as float
+            reward += 200.0
         else:
             terminated = False
 
@@ -99,7 +91,7 @@ class OT2Env(gym.Env):
         else:
             truncated = False
 
-        info = {'distance': float(distance)}  # Also convert distance in info
+        info = {'distance': float(distance)}
         self.steps += 1
 
         return observation, reward, terminated, truncated, info
