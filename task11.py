@@ -7,10 +7,10 @@ import argparse
 from ot2_env_wrapper import OT2Env  # Import your custom environment
 from clearml import Task
 
+task.add_requirements('requirements.txt')
+
 task = Task.init(project_name='Mentor Group - Uther/Group 1', # NB: Replace YourName with your own name
                     task_name='OT2-experiment-1')
-
-task.set_packages(requirements_file='requirements.txt')
 
 #copy these lines exactly as they are
 #setting the base docker image
