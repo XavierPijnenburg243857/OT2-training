@@ -9,7 +9,9 @@ from clearml import Task
 
 Task.add_requirements('requirements.txt')
 
-task = Task.init(project_name='Mentor Group - Uther/Group 1', # NB: Replace YourName with your own name
+#task = Task.init(project_name='Mentor Group - Uther/Group 1',
+
+task = Task.init(project_name='test', # NB: Replace YourName with your own name
                     task_name='OT2-experiment-1')
 
 #copy these lines exactly as they are
