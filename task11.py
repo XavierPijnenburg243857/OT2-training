@@ -22,7 +22,7 @@ parser.add_argument("--clip_range", type=float, default=0.2)
 parser.add_argument("--ent_coef", type=float, default=0.01)
 parser.add_argument("--vf_coef", type=float, default=0.5)
 parser.add_argument("--max_grad_norm", type=float, default=0.5)
-parser.add_argument("--early_stopping_patience", type=int, default=3)
+parser.add_argument("--early_stopping_patience", type=int, default=5)
 args = parser.parse_args()
 
 # NOW initialize ClearML - it will capture the args
@@ -74,7 +74,7 @@ for i in range(10):
         tb_log_name=f"runs/{run.id}"
     )
     
-    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
+    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=100)
     print(f"\n✅ Cycle {i+1} - Evaluation reward: {mean_reward:.2f} +/- {std_reward:.2f}")
     
     wandb.log({"eval/mean_reward": mean_reward, "cycle": i+1})
