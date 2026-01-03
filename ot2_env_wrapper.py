@@ -82,7 +82,7 @@ class OT2Env(gym.Env):
         threshold = 0.001
         if distance < threshold:
             terminated = True
-            reward += 200.0
+            reward += 300.0
         else:
             terminated = False
 
