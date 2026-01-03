@@ -9,12 +9,7 @@ from clearml import Task
 
 Task.add_requirements('requirements.txt')
 
-task = Task.init(project_name='test',
-                    task_name='OT2-experiment-1')
-
-task.set_base_docker('deanis/2023y2b-rl:latest')
-task.execute_remotely(queue_name="default")
-
+# MOVE ARGPARSE HERE - BEFORE Task.init()
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0003)
 parser.add_argument("--batch_size", type=int, default=256)
@@ -28,10 +23,19 @@ parser.add_argument("--ent_coef", type=float, default=0.01)
 parser.add_argument("--vf_coef", type=float, default=0.5)
 parser.add_argument("--max_grad_norm", type=float, default=0.5)
 parser.add_argument("--early_stopping_patience", type=int, default=3)
-
 args = parser.parse_args()
 
-os.environ['WANDB_API_KEY'] ='b82d3dc4d93780790f8600c249009ba32eb79bd4' 
+# NOW initialize ClearML - it will capture the args
+task = Task.init(
+    project_name='test',
+    task_name=f'OT2_LR{args.learning_rate}_BS{args.batch_size}'
+)
+
+task.set_base_docker('deanis/2023y2b-rl:latest')
+task.execute_remotely(queue_name="default")
+
+# Rest of your script...
+os.environ['WANDB_API_KEY'] = 'b82d3dc4d93780790f8600c249009ba32eb79bd4'
 
 run = wandb.init(project="ot2_robot_training", sync_tensorboard=True)
 
