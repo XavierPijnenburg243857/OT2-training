@@ -27,7 +27,7 @@ args = parser.parse_args()
 
 # NOW initialize ClearML - it will capture the args
 task = Task.init(
-    project_name='test',
+    project_name='Mentor Group - Uther/Group 1',
     task_name=f'OT2_LR{args.learning_rate}_BS{args.batch_size}'
 )
 
